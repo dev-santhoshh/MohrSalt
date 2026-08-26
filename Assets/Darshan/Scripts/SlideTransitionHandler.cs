@@ -22,7 +22,6 @@ public class SlideTransitionHandler : MonoBehaviour
     public void RunTransition()
     {
         StartCoroutine(TransitionSequence());
-        Debug.Log("RunTransition called");
     }
 
     private IEnumerator TransitionSequence()

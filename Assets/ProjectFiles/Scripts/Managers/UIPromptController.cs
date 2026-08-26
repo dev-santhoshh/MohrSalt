@@ -2,6 +2,8 @@ using System.Collections.Generic;
 using TMPro;
 using UnityEngine;
 using UnityEngine.UI;
+using System;
+
 
 #if UNITY_EDITOR
 using UnityEditor;
@@ -35,6 +37,7 @@ public class UIPromptController : MonoBehaviour
     private void Start()
     {
         HandlePageChanged(PageNavigationController.CurrentIndex);
+        ApplyPanelVisibility(0);
     }
 
     private void HandlePageChanged(int index)
@@ -43,6 +46,7 @@ public class UIPromptController : MonoBehaviour
             return;
 
         currentPageIndex = index;
+
         ShowPage(index);
     }
 
