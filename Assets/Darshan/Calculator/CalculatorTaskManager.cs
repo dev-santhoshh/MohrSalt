@@ -1,11 +1,6 @@
 using UnityEngine;
 using System.Collections.Generic;
 
-// -----------------------------------------------------------------
-// Holds the correct value for each NumericInputField on this page.
-// Validates a field the instant its value changes (checkmark/error
-// shown immediately). Once every field is correct, unlocks navigation.
-// -----------------------------------------------------------------
 public class CalculatorTaskManager : MonoBehaviour
 {
     [System.Serializable]
@@ -25,8 +20,12 @@ public class CalculatorTaskManager : MonoBehaviour
     [Tooltip("If true, unlocks Next automatically once every field is correct.")]
     public bool enableNavigation = true;
 
-    public void ValidateField(NumericInputField field)
+    // Called by NumPadController's Check button - validates only the
+    // field the player is currently typing in.
+    public void CheckField(NumericInputField field)
     {
+        if (field == null) return;
+
         FieldAnswer match = answers.Find(a => a.field == field);
         if (match == null) return;
 
@@ -35,26 +34,15 @@ public class CalculatorTaskManager : MonoBehaviour
         if (IsMatch(enteredValue, match.correctValue))
         {
             field.SetCorrect();
+            Debug.Log($"[CalculatorTask] {field.name} — correct.");
         }
         else
         {
             field.SetIncorrect();
+            Debug.Log($"[CalculatorTask] {field.name} — incorrect.");
         }
 
         CheckAllCorrect();
-    }
-
-    private bool IsMatch(string entered, string correct)
-    {
-        // Try numeric comparison first (handles "3.50" vs "3.5" etc.)
-        if (float.TryParse(entered, out float enteredNum) &&
-            float.TryParse(correct, out float correctNum))
-        {
-            return Mathf.Approximately(enteredNum, correctNum);
-        }
-
-        // Fallback to exact string match
-        return entered == correct;
     }
 
     private void CheckAllCorrect()
@@ -62,7 +50,7 @@ public class CalculatorTaskManager : MonoBehaviour
         foreach (var answer in answers)
         {
             if (answer.field == null || !answer.field.IsCorrect)
-                return; // at least one field isn't correct yet
+                return;
         }
 
         Debug.Log("[CalculatorTask] All fields correct! Unlocking navigation.");
@@ -73,11 +61,39 @@ public class CalculatorTaskManager : MonoBehaviour
         }
     }
 
+    // Called by NumPadController's Autofill button - reveals the correct answers
+    public void AutofillAnswers()
+    {
+        foreach (var answer in answers)
+        {
+            if (answer.field == null) continue;
+
+            answer.field.SetValue(answer.correctValue);
+            answer.field.SetCorrect();
+        }
+
+        Debug.Log("[CalculatorTask] Autofilled all answers.");
+
+        if (enableNavigation)
+        {
+            PageNavigationController.RequestNavigationUnlock();
+        }
+    }
+
+    private bool IsMatch(string entered, string correct)
+    {
+        if (float.TryParse(entered, out float enteredNum) &&
+            float.TryParse(correct, out float correctNum))
+        {
+            return Mathf.Approximately(enteredNum, correctNum);
+        }
+
+        return entered == correct;
+    }
+
     // Called by NumPadController's Retry button
     public void ResetTask()
-    {
-        // NumPadController already clears each field's display/value;
-        // this just resets any manager-side state if needed later.
+        {
         Debug.Log("[CalculatorTask] Task reset via Retry.");
     }
 }

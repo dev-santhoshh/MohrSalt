@@ -1,17 +1,10 @@
 using UnityEngine;
-using UnityEngine.UI;
 using TMPro;
 
-// -----------------------------------------------------------------
-// One of these per input box (the 3 blanks + the final answer box).
-// Tap it to select it, then num-pad digits get appended here.
-// Manager calls SetCorrect()/SetIncorrect() to show a checkmark or
-// error state once the value is validated.
-// -----------------------------------------------------------------
 public class NumericInputField : MonoBehaviour
 {
-    [Header("Display")]
-    public TextMeshProUGUI valueText;
+    [Header("The real TMP Input Field")]
+    public TMP_InputField inputField;
 
     [Header("Selection Visual")]
     [Tooltip("Optional - an outline/background image that highlights when this field is selected.")]
@@ -21,18 +14,16 @@ public class NumericInputField : MonoBehaviour
     public GameObject correctCheckmark;
     public GameObject incorrectMark;
 
-    [Header("Button (tap to select this field)")]
-    public Button selectButton;
-
-    private string currentValue = "";
     private NumPadController numPad;
 
     public bool IsCorrect { get; private set; }
 
     private void Awake()
     {
-        if (selectButton != null)
-            selectButton.onClick.AddListener(SelectThisField);
+        if (inputField != null)
+        {
+            inputField.onSelect.AddListener(_ => OnFieldSelected());
+        }
 
         ClearVisualState();
     }
@@ -42,7 +33,7 @@ public class NumericInputField : MonoBehaviour
         numPad = pad;
     }
 
-    private void SelectThisField()
+    private void OnFieldSelected()
     {
         if (numPad != null)
             numPad.SetActiveField(this);
@@ -56,34 +47,37 @@ public class NumericInputField : MonoBehaviour
 
     public void AppendDigit(string digit)
     {
-        currentValue += digit;
-        UpdateDisplay();
+        if (inputField == null) return;
+        inputField.text += digit;
+        inputField.caretPosition = inputField.text.Length;
     }
 
     public void Backspace()
     {
-        if (currentValue.Length > 0)
+        if (inputField == null) return;
+        if (inputField.text.Length > 0)
         {
-            currentValue = currentValue.Substring(0, currentValue.Length - 1);
-            UpdateDisplay();
+            inputField.text = inputField.text.Substring(0, inputField.text.Length - 1);
+            inputField.caretPosition = inputField.text.Length;
         }
     }
 
     public void Clear()
     {
-        currentValue = "";
+        if (inputField != null)
+            inputField.text = "";
+
         IsCorrect = false;
-        UpdateDisplay();
         ClearVisualState();
     }
 
-    public string GetValue() => currentValue;
-
-    private void UpdateDisplay()
+    public void SetValue(string value)
     {
-        if (valueText != null)
-            valueText.text = currentValue;
+        if (inputField != null)
+            inputField.text = value;
     }
+
+    public string GetValue() => inputField != null ? inputField.text : "";
 
     public void SetCorrect()
     {

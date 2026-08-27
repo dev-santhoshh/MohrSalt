@@ -1,0 +1,25 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: d01fd2d64a9249049aaa77d5c12a82fe, type: 3}
+  m_Name: Question 6
+  m_EditorClassIdentifier: 
+  questionText: Which of the following pairs of cations are present in Mohr's salt?
+  referenceImage: {fileID: 0}
+  explanationText: "Mohr's Salt is represented as (NH<sub>4</sub>)<sub>2</sub>Fe(SO<sub>4</sub>)<sub>2</sub>\xB76H<sub>2</sub>O.
+    This compound contains two primary cations, namely the ammonium cation (denoted
+    by NH<sub>4</sub><sup>+</sup>) and the ferrous cation (denoted by Fe<sup>2+</sup>)."
+  options:
+  - Fe<sup>3+</sup>, NH<sub>4</sub><sup>+</sup>
+  - Fe<sup>2+</sup>, NH<sub>4</sub><sup>+</sup>
+  - Al<sup>2+</sup>, NH<sup>+</sup>
+  - Fe<sup>3+</sup>, Cl<sup>3+</sup>
+  correctOptionIndex: 1

@@ -8,6 +8,9 @@ using System.Collections.Generic;
 // Movement is smoothed with Lerp.
 // On correct snap the assigned Animator is enabled; otherwise
 // it stays disabled.
+// NOTE: Rotation is NOT touched on drop/snap - the object keeps
+// whatever rotation it had while being dragged, so the Animator/
+// PlayableDirector's own rotation keyframes are never overridden.
 // -----------------------------------------------------------------
 public class DragDropAnimManager : MonoBehaviour
 {
@@ -29,28 +32,20 @@ public class DragDropAnimManager : MonoBehaviour
         [Tooltip("Trigger collider marking the valid drop zone. Must have 'Is Trigger' checked.")]
         public Collider snapZone;
 
-        [Tooltip("Max rotation difference (degrees) from snapZone's rotation to count as a valid drop. Leave at 180 to ignore rotation entirely and only check overlap.")]
-        public float snapAngle = 180f;
-
         [Tooltip("Which axis/axes the object may move on while dragging. XY = X+Y (Z locked).")]
         public DragAxis dragAxis = DragAxis.XY;
 
         [Tooltip("Animator on the dragged object. Enabled only after a successful snap; otherwise kept disabled.")]
         public Animator objectAnimator;
 
+        [Tooltip("Object shown only while this entry's dragTarget is actively being dragged. Enabled on drag start, disabled the instant the drag ends (snap success, snap fail, or interrupted by a page change).")]
+        public GameObject dragHighlightObject;
+
         [Tooltip("Renderers to highlight while this page's object is waiting to be dragged.")]
         public List<Renderer> targetRenderers = new List<Renderer>();
 
         public Material highlightMaterial;
         public AnimationSource animation;
-
-        [Header("UI / Objects To Disable On Successful Snap")]
-        [Tooltip("Any UI or objects (bottle UI, beaker UI, prompts, hints, etc.) to disable the moment the snap succeeds. Add as many as this page needs.")]
-        public List<GameObject> objectsToDisableOnSnap = new List<GameObject>();
-
-        [Header("Post-Animation Transition")]
-        [Tooltip("Handles disabling old slide objects, moving camera, enabling next slide objects, then unlocking nav. Called automatically once the animation finishes.")]
-        public SlideTransitionHandler transitionHandler;
 
         [HideInInspector] public List<Material> originalMaterials;
     }
@@ -74,7 +69,6 @@ public class DragDropAnimManager : MonoBehaviour
     private Vector3 dragPlaneOffset;
     private float lockedZ;
     private Vector3 dragStartPosition;
-    private Quaternion dragStartRotation;
     private Vector3 smoothTargetPos;   // the position we are lerping toward
 
     private void OnEnable()
@@ -101,6 +95,9 @@ public class DragDropAnimManager : MonoBehaviour
         {
             if (e != null && e.objectAnimator != null)
                 e.objectAnimator.enabled = false;
+
+            if (e != null && e.dragHighlightObject != null)
+                e.dragHighlightObject.SetActive(false);
         }
 
         SetPageContext(PageNavigationController.CurrentIndex);
@@ -144,7 +141,6 @@ public class DragDropAnimManager : MonoBehaviour
 
         draggedTransform = entry.dragTarget.transform;
         dragStartPosition = draggedTransform.position;
-        dragStartRotation = draggedTransform.rotation;
         lockedZ = draggedTransform.position.z;
         smoothTargetPos = draggedTransform.position;   // start from current position
         dragging = true;
@@ -154,12 +150,16 @@ public class DragDropAnimManager : MonoBehaviour
 
         if (entry.objectAnimator != null)
             entry.objectAnimator.enabled = false;
+
+        if (entry.dragHighlightObject != null)
+            entry.dragHighlightObject.SetActive(true);
     }
 
     private void ContinueDrag(PageEntry entry)
     {
         if (draggedTransform == null) return;
 
+        // Calculate the ideal (un-smoothed) target
         Vector3 pointerWorld = ScreenToXYPlanePoint(Pointer.current.position.ReadValue());
         Vector3 idealPos = pointerWorld + dragPlaneOffset;
         idealPos.z = lockedZ;
@@ -175,9 +175,11 @@ public class DragDropAnimManager : MonoBehaviour
                 break;
             case DragAxis.XY:
             default:
+                // already free X/Y, locked Z
                 break;
         }
 
+        // Smoothly move toward the ideal position
         smoothTargetPos = idealPos;
         draggedTransform.position = Vector3.Lerp(
             draggedTransform.position,
@@ -189,6 +191,10 @@ public class DragDropAnimManager : MonoBehaviour
     private void EndDrag(int pageIndex, PageEntry entry)
     {
         dragging = false;
+
+        if (entry.dragHighlightObject != null)
+            entry.dragHighlightObject.SetActive(false);
+
         EvaluateDrop(pageIndex, entry);
         draggedTransform = null;
     }
@@ -207,23 +213,15 @@ public class DragDropAnimManager : MonoBehaviour
     {
         Transform obj = entry.dragTarget.transform;
         bool overlapping = entry.dragTarget.bounds.Intersects(entry.snapZone.bounds);
-        float angle = Quaternion.Angle(obj.rotation, entry.snapZone.transform.rotation);
 
-        Debug.Log($"[DragDrop] Page {pageIndex} release check — overlapping={overlapping}, angle={angle:F2} (max {entry.snapAngle})");
+        Debug.Log($"[DragDrop] Page {pageIndex} release check — overlapping={overlapping}");
 
-        if (overlapping && angle <= entry.snapAngle)
+        if (overlapping)
         {
-            Debug.Log($"[DragDrop] Page {pageIndex} — SNAP PASSED, snapping and triggering animation.");
+            Debug.Log($"[DragDrop] Page {pageIndex} — SNAP PASSED, snapping position (rotation untouched) and triggering animation.");
+            // Position-only snap. Rotation is intentionally left as-is so the
+            // Animator/PlayableDirector's own rotation keyframes are never overridden.
             obj.position = entry.snapZone.transform.position;
-            obj.rotation = entry.snapZone.transform.rotation;
-
-            if (entry.objectsToDisableOnSnap != null)
-            {
-                foreach (var go in entry.objectsToDisableOnSnap)
-                {
-                    if (go != null) go.SetActive(false);
-                }
-            }
 
             if (entry.objectAnimator != null)
                 entry.objectAnimator.enabled = true;
@@ -234,7 +232,6 @@ public class DragDropAnimManager : MonoBehaviour
         {
             Debug.Log($"[DragDrop] Page {pageIndex} — snap FAILED, out of tolerance. Returning to start position.");
             obj.position = dragStartPosition;
-            obj.rotation = dragStartRotation;
 
             if (entry.objectAnimator != null)
                 entry.objectAnimator.enabled = false;
@@ -251,17 +248,8 @@ public class DragDropAnimManager : MonoBehaviour
             Debug.Log($"[DragDrop] Page {pageIndex} — OnSnapped: valid AnimationSource found (director={(entry.animation.director != null ? entry.animation.director.name : "none")}, animator={(entry.animation.animator != null ? entry.animation.animator.name : "none")}). Starting Play().");
             StartCoroutine(entry.animation.Play(this, () =>
             {
-                Debug.Log($"[DragDrop] Page {pageIndex} — animation Play() completed.");
-
-                if (entry.transitionHandler != null)
-                {
-                    entry.transitionHandler.RunTransition();
-                }
-                else
-                {
-                    Debug.LogWarning($"[DragDrop] Page {pageIndex}: no transitionHandler assigned - unlocking navigation directly.");
-                    PageNavigationController.RequestNavigationUnlock();
-                }
+                Debug.Log($"[DragDrop] Page {pageIndex} — animation Play() completed, requesting navigation unlock.");
+                PageNavigationController.RequestNavigationUnlock();
             }));
         }
         else
@@ -275,7 +263,14 @@ public class DragDropAnimManager : MonoBehaviour
     {
         PageEntry previousEntry = FindEntry(currentPageIndex);
         if (previousEntry != null)
+        {
             ClearHighlight(previousEntry);
+
+            // If the page changed mid-drag, make sure the drag highlight
+            // doesn't get left on.
+            if (previousEntry.dragHighlightObject != null)
+                previousEntry.dragHighlightObject.SetActive(false);
+        }
 
         currentPageIndex = pageIndex;
         dragging = false;

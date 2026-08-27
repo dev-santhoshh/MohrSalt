@@ -1,14 +1,5 @@
 using UnityEngine;
-using UnityEngine.UI;
 
-// -----------------------------------------------------------------
-// Wire each of the 9 number buttons (and optional '.' / '+-' /
-// backspace buttons) to call OnDigitPressed("1") ... OnDigitPressed("9"),
-// OnDecimalPressed(), OnBackspacePressed() from their OnClick() events.
-//
-// Call SetActiveField() when the player taps an input box - typically
-// from NumericInputField itself (already wired via Init()).
-// -----------------------------------------------------------------
 public class NumPadController : MonoBehaviour
 {
     [Header("All Input Fields On This Page")]
@@ -39,22 +30,16 @@ public class NumPadController : MonoBehaviour
             activeField.SetSelected(true);
     }
 
-    // Wire number buttons (1-9, 0) to call this with their digit string
     public void OnDigitPressed(string digit)
     {
         if (activeField == null) return;
-
         activeField.AppendDigit(digit);
-
-        if (taskManager != null)
-            taskManager.ValidateField(activeField);
     }
 
     public void OnDecimalPressed()
     {
         if (activeField == null) return;
 
-        // Avoid multiple decimal points
         if (!activeField.GetValue().Contains("."))
         {
             activeField.AppendDigit(".");
@@ -68,7 +53,6 @@ public class NumPadController : MonoBehaviour
         string current = activeField.GetValue();
         if (current.StartsWith("-"))
         {
-            // Remove leading minus - re-set the value by clearing and rebuilding
             activeField.Clear();
             activeField.AppendDigit(current.Substring(1));
         }
@@ -83,6 +67,26 @@ public class NumPadController : MonoBehaviour
     {
         if (activeField == null) return;
         activeField.Backspace();
+    }
+
+    // Wire the Check button to this - validates ONLY the currently active field
+    public void OnCheckPressed()
+    {
+        if (activeField == null)
+        {
+            Debug.LogWarning("[NumPad] Check pressed but no field is selected.");
+            return;
+        }
+
+        if (taskManager != null)
+            taskManager.CheckField(activeField);
+    }
+
+    // Wire the Autofill button to this - fills every field with the correct answer
+    public void OnAutofillPressed()
+    {
+        if (taskManager != null)
+            taskManager.AutofillAnswers();
     }
 
     // Wire the Retry button to this

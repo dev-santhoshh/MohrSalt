@@ -26,13 +26,13 @@ Material:
     m_TexEnvs: []
     m_Ints: []
     m_Floats:
-    - _alpha_value: 0
+    - _alpha_value: 0.3
     - _glow_strength: 1
-    - _pulse_speed: 1
+    - _pulse_speed: 2
     m_Colors:
     - _SpecColor: {r: 0.2, g: 0.2, b: 0.2, a: 1}
-    - _base_Color: {r: 1, g: 1, b: 1, a: 0}
-    - _emission_color: {r: 1, g: 1, b: 1, a: 0}
+    - _base_Color: {r: 0, g: 1, b: 0.8827765, a: 0}
+    - _emission_color: {r: 0, g: 1, b: 0.88235295, a: 0}
   m_BuildTextureStacks: []
   m_AllowLocking: 1
 --- !u!114 &6768843036111197062
