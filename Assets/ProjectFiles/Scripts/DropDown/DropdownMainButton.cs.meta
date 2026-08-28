@@ -1,2 +1,21 @@
 fileFormatVersion: 2
 guid: 888cd583b0d623f40b885642b8c318a5
+MonoImporter:
+  externalObjects: {}
+  serializedVersion: 2
+  defaultReferences:
+  - data: {fileID: 11400000, guid: 7769136096613d447ba5696aeee4a6f1, type: 2}
+  - button: {instanceID: 0}
+  - popupPrefab: {fileID: 6446299684214601197, guid: 806ed253a7fc51b4080128e257817b60, type: 3}
+  - popupParent: {instanceID: 0}
+  - outputText: {instanceID: 0}
+  - correctPrefab: {fileID: 7380764036762169055, guid: 0871ad3c79d096541b9affa105e2a005, type: 3}
+  - wrongPrefab: {fileID: 1434633464582821261, guid: 60bedba2549205c41b5a97a4af5c8677, type: 3}
+  - audioSource: {instanceID: 0}
+  - correctClip: {instanceID: 0}
+  - wrongClip: {instanceID: 0}
+  executionOrder: 0
+  icon: {instanceID: 0}
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 

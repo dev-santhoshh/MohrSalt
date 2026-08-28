@@ -15,6 +15,8 @@ public class DropSlot_SS : MonoBehaviour, IDropHandler
     [Header("Events")]
     [SerializeField] private UnityEvent onCorrectPlaced;
 
+    public GameObject panel;
+
     private bool occupied = false;
 
     // Shared counter for the current page
@@ -54,6 +56,7 @@ public class DropSlot_SS : MonoBehaviour, IDropHandler
             if (filledSlotCount >= totalSlotsInPage)
             {
                 PageNavigationController.RequestNavigationUnlock();
+                panel.SetActive(true);
             }
         }
         // Wrong item is handled by Dragabble_SS
