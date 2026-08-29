@@ -1,6 +1,7 @@
 using UnityEngine;
 using UnityEngine.InputSystem;
 using System.Collections.Generic;
+using UnityEngine.Events;
 
 // -----------------------------------------------------------------
 // One mechanism per page. Drag is restricted to X/Y (Z locked)
@@ -48,6 +49,8 @@ public class DragDropAnimManager : MonoBehaviour
         public AnimationSource animation;
 
         [HideInInspector] public List<Material> originalMaterials;
+
+        public UnityEvent OnDragCompleted;
     }
 
     [Header("Per-Page Drag-Drop Entries (one per page)")]
@@ -226,6 +229,7 @@ public class DragDropAnimManager : MonoBehaviour
             if (entry.objectAnimator != null)
                 entry.objectAnimator.enabled = true;
 
+            entry.OnDragCompleted?.Invoke();
             OnSnapped(pageIndex, entry);
         }
         else
