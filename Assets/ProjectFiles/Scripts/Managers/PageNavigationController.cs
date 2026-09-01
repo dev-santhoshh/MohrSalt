@@ -3,9 +3,34 @@ using UnityEngine.UI;
 using System;
 using System.Collections.Generic;
 using TMPro;
+using UnityEngine.Events;
 
 public class PageNavigationController : MonoBehaviour
 {
+    // 1. Consolidated Page Data
+    // Everything related to a specific page is now grouped together.
+    [System.Serializable]
+    public class PageData
+    {
+        [Header("Navigation Rules")]
+        [Tooltip("If true, requires interaction to unlock the NEXT button.")]
+        public bool requiresInteraction = false;
+
+        [Tooltip("If true, locks BOTH Next and Previous buttons until EnableNavigationButtons() / RequestNavigationUnlock() is called.")]
+        public bool lockNavigationTillUnlocked = false;
+
+        [Header("Page Events")]
+        [Tooltip("Triggered when arriving at this page by clicking NEXT.")]
+        public UnityEvent onArriveViaNext;
+
+        [Tooltip("Triggered when arriving at this page by clicking PREVIOUS.")]
+        public UnityEvent onArriveViaPrevious;
+    }
+
+    [Header("Pages Configuration")]
+    [Tooltip("Configure rules and events for each individual page here.")]
+    [SerializeField] private List<PageData> pages = new();
+
     [Header("Navigation Buttons")]
     [SerializeField] private Button nextButton;
     [SerializeField] private Button previousButton;
@@ -19,9 +44,6 @@ public class PageNavigationController : MonoBehaviour
 
     [Header("Testing Mode (Ignore Locks)")]
     [SerializeField] private bool testing = false;
-
-    [Header("Requires Interaction Per Page (Navigation Source)")]
-    [SerializeField] private List<bool> requiresInteraction = new();
 
     // Events
     public static event Action<int> OnPageChanged;
@@ -37,7 +59,7 @@ public class PageNavigationController : MonoBehaviour
     private readonly HashSet<int> visitedPages = new();
     private readonly HashSet<int> completedPages = new();
 
-    private int NavigationPageCount => Mathf.Max(1, requiresInteraction.Count);
+    private int NavigationPageCount => Mathf.Max(1, pages.Count);
 
     private void Awake()
     {
@@ -88,12 +110,16 @@ public class PageNavigationController : MonoBehaviour
             return;
 
         currentIndex++;
-
         visitedPages.Add(currentIndex);
 
         UpdateButtons();
         UpdateDisplay();
         RaisePageChanged();
+
+        if (currentIndex < pages.Count)
+        {
+            pages[currentIndex].onArriveViaNext?.Invoke();
+        }
     }
 
     public void PreviousPage()
@@ -102,12 +128,16 @@ public class PageNavigationController : MonoBehaviour
             return;
 
         currentIndex--;
-
         visitedPages.Add(currentIndex);
 
         UpdateButtons();
         UpdateDisplay();
         RaisePageChanged();
+
+        if (currentIndex < pages.Count)
+        {
+            pages[currentIndex].onArriveViaPrevious?.Invoke();
+        }
     }
 
     private void RaisePageChanged()
@@ -124,21 +154,36 @@ public class PageNavigationController : MonoBehaviour
             return;
         }
 
-        bool needsInteraction =
-            currentIndex < requiresInteraction.Count &&
-            requiresInteraction[currentIndex];
-
         bool isCompleted = completedPages.Contains(currentIndex);
+        bool isPageLocked = false;
+        bool needsInteraction = false;
+
+        // Safely extract rules for the current page
+        if (currentIndex < pages.Count)
+        {
+            isPageLocked = pages[currentIndex].lockNavigationTillUnlocked;
+            needsInteraction = pages[currentIndex].requiresInteraction;
+        }
+
+        // If manual page lock is enabled for THIS specific page, block both buttons until unlocked
+        if (isPageLocked && !isCompleted)
+        {
+            if (previousButton) previousButton.interactable = false;
+            if (nextButton) nextButton.interactable = false;
+            return;
+        }
 
         // Previous behaves normally
         if (previousButton)
             previousButton.interactable = currentIndex > 0;
 
-        // Next
+        // Next button evaluation
         if (nextButton)
         {
             if (!needsInteraction)
             {
+                // Note: You can change this to `currentIndex < NavigationPageCount - 1` 
+                // if you want the Next button to be disabled on the very last page.
                 nextButton.interactable = true;
             }
             else
@@ -191,8 +236,6 @@ public class PageNavigationController : MonoBehaviour
 
         pageNumberText.text = $"{displayedPage}/{NavigationPageCount}";
     }
-
-    // Optional helper methods
 
     public bool IsPageVisited(int pageIndex)
     {
