@@ -3,10 +3,6 @@ using TMPro;
 using UnityEngine;
 using UnityEngine.UI;
 
-#if UNITY_EDITOR
-using UnityEditor;
-#endif
-
 public class UIControllerPrompt : MonoBehaviour
 {
     [Header("Pages")]
@@ -24,17 +20,17 @@ public class UIControllerPrompt : MonoBehaviour
 
     public void OnEnable()
     {
-        PageNavController.OnPageChanged += HandlePageChanged;
+        PageNavigationController.OnPageChanged += HandlePageChanged;
     }
 
     public void OnDisable()
     {
-        PageNavController.OnPageChanged -= HandlePageChanged;
+        PageNavigationController.OnPageChanged -= HandlePageChanged;
     }
 
     public void Start()
     {
-        HandlePageChanged(PageNavController.CurrentIndex);
+        HandlePageChanged(PageNavigationController.CurrentIndex);
     }
 
     public void HandlePageChanged(int index)
@@ -147,99 +143,3 @@ public class UIControllerPrompt : MonoBehaviour
         }
     }
 }
-
-[System.Serializable]
-public class PageData
-{
-    [Header("Page Name / Page No")]
-    public string pageName;
-
-    [TextArea]
-    public string pageText;
-
-    [Header("Display Options")]
-    public bool showDialogBox;
-    public bool showAlternatePanels;
-
-    [Header("Alternate Panels For This Page")]
-    public List<AlternatePanelData> alternatePanels;
-
-    // 🚀 NEW
-    [Header("Object Visibility For This Page")]
-    [Tooltip("List of GameObjects to hide/unhide when this page is shown")]
-    public List<PageObjectVisibility> objectVisibilityList;
-}
-
-[System.Serializable]
-public class AlternatePanelData
-{
-    public GameObject panel;
-
-    [Tooltip("If enabled, this panel will remain active in upcoming pages")]
-    public bool stayInUpcomingPages;
-
-    [Header("Enable Once Feature")]
-    [Tooltip("If enabled, panel will activate only once and never again on revisit")]
-    public bool enableOnce;
-
-    [HideInInspector] public bool hasBeenEnabledOnce;
-}
-
-// 🚀 NEW: one GameObject + one bool, per element
-[System.Serializable]
-public class PageObjectVisibility
-{
-    public GameObject targetObject;
-
-    [Tooltip("ON = object is hidden on this page. OFF = object is shown on this page.")]
-    public bool hideOnThisPage;
-}
-
-#if UNITY_EDITOR
-[CustomEditor(typeof(UIControllerPrompt))]
-[CanEditMultipleObjects]
-public class UIControllerPromptEditor : Editor
-{
-    public override void OnInspectorGUI()
-    {
-        DrawDefaultInspector();
-
-        GUILayout.Space(10);
-
-        if (GUILayout.Button("Name Pages"))
-        {
-            foreach (var t in targets)
-            {
-                UIControllerPrompt controller = (UIControllerPrompt)t;
-                NamePages(controller);
-            }
-        }
-    }
-
-    private void NamePages(UIControllerPrompt controller)
-    {
-        SerializedObject so = new SerializedObject(controller);
-        SerializedProperty pagesProp = so.FindProperty("pages");
-
-        if (pagesProp == null || pagesProp.arraySize == 0)
-        {
-            Debug.LogWarning("No pages found to rename.");
-            return;
-        }
-
-        for (int i = 0; i < pagesProp.arraySize; i++)
-        {
-            SerializedProperty page = pagesProp.GetArrayElementAtIndex(i);
-            SerializedProperty nameProp = page.FindPropertyRelative("pageName");
-
-            if (nameProp != null)
-            {
-                nameProp.stringValue = $"Page {i + 1}";
-            }
-        }
-
-        so.ApplyModifiedProperties();
-        EditorUtility.SetDirty(controller);
-    }
-}
-#endif

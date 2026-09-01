@@ -163,12 +163,12 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: addd1fe0be60a6049b0962a7fb1571b9, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::PageNavigationController
+  pages: []
   nextButton: {fileID: 1305063644}
   previousButton: {fileID: 1232696552}
   pageNumberText: {fileID: 2100203303}
   developerIndexMode: 0
   testing: 0
-  requiresInteraction: 01010101010101010101
   currentIndex: 0
 --- !u!1 &410087039
 GameObject:
@@ -963,6 +963,14 @@ MonoBehaviour:
           m_CallState: 2
     allowMultipleTriggers: 0
     hasTriggered: 0
+  enableCameraMove: 0
+  cameraMoveTarget: {fileID: 0}
+  cameraMoveWaitTime: 2
+  cameraMoveDuration: 1
+  matchTargetRotation: 1
+  OnCameraReachedTarget:
+    m_PersistentCalls:
+      m_Calls: []
   targetCamera: {fileID: 0}
   ignoreUI: 1
 --- !u!65 &1327102180
@@ -1120,6 +1128,7 @@ MonoBehaviour:
   onCorrectPlaced:
     m_PersistentCalls:
       m_Calls: []
+  panel: {fileID: 0}
 --- !u!114 &1716197939
 MonoBehaviour:
   m_ObjectHideFlags: 0
