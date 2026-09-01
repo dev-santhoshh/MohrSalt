@@ -49,6 +49,24 @@ public class DraggableObject : MonoBehaviour
     [Header("Animator Control")]
     [SerializeField] private Animator animator;
 
+    // ✅ NEW FEATURE — highlight material on the draggable object itself
+    [System.Serializable]
+    public class RendererMaterialPair
+    {
+        public Renderer renderer;
+        public Material defaultMaterial;
+    }
+
+    [Header("Self Highlight (Material Swap)")]
+    [Tooltip("Each entry pairs a renderer on this object with its own default material.")]
+    [SerializeField] private List<RendererMaterialPair> highlightRenderers = new List<RendererMaterialPair>();
+    [Tooltip("Material shown on all listed renderers while the object is idle and waiting to be dragged.")]
+    [SerializeField] private Material highlightMaterial;
+    [Tooltip("Enable/disable this self-highlight feature entirely.")]
+    [SerializeField] private bool highlightWhileDraggable = true;
+
+    private bool selfHighlightActive;
+
     [Header("Drag Events")]
     [SerializeField] private UnityEvent OnDragStart;
 
@@ -92,6 +110,17 @@ public class DraggableObject : MonoBehaviour
                 element.highlightCollider = element.highlightObject.GetComponent<Collider>();
                 element.highlightObject.SetActive(false);
             }
+        }
+
+        // ✅ NEW FEATURE — start on default material
+        if (highlightRenderers.Count > 0)
+        {
+            foreach (var pair in highlightRenderers)
+            {
+                if (pair.renderer != null && pair.defaultMaterial != null)
+                    pair.renderer.material = pair.defaultMaterial;
+            }
+            selfHighlightActive = false;
         }
     }
 
@@ -179,6 +208,9 @@ public class DraggableObject : MonoBehaviour
 
     void Update()
     {
+        // ✅ NEW FEATURE — keep self highlight in sync every frame
+        RefreshSelfHighlight();
+
         if (returning)
         {
             ReturnToLastValidPosition();
@@ -195,6 +227,30 @@ public class DraggableObject : MonoBehaviour
             return;
 
         HandleInput();
+    }
+
+    // ✅ NEW FEATURE — swaps between highlight material and each renderer's own default material
+    // Highlighted: idle + draggable + not currently being dragged
+    // Default: while dragging, and permanently once snapped/locked
+    void RefreshSelfHighlight()
+    {
+        if (highlightRenderers.Count == 0 || highlightMaterial == null)
+            return;
+
+        bool showHighlight = highlightWhileDraggable && canDrag && !interactionLocked && !isDragging;
+
+        if (showHighlight == selfHighlightActive)
+            return;
+
+        selfHighlightActive = showHighlight;
+
+        foreach (var pair in highlightRenderers)
+        {
+            if (pair.renderer == null || pair.defaultMaterial == null)
+                continue;
+
+            pair.renderer.material = showHighlight ? highlightMaterial : pair.defaultMaterial;
+        }
     }
 
     void HandleInput()

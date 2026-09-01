@@ -124,7 +124,7 @@ public class TouchOrClickEvent : MonoBehaviour
             GameObject blockingObject = GetBlockingUIObject(screenPosition);
 
             // If the "blocking" UI element is actually this object itself (or a
-            // child of it — e.g. it has a Graphic/Button on it for a world-space
+            // child of it ï¿½ e.g. it has a Graphic/Button on it for a world-space
             // canvas), that's not really a block: it just means EventSystem
             // registered the click via the UI raycaster instead of physics.
             // Treat it as a valid click on this object instead of bailing out.
@@ -132,7 +132,7 @@ public class TouchOrClickEvent : MonoBehaviour
             {
                 if (debugLogging)
                     Debug.Log($"[TouchOrClickEvent] '{gameObject.name}' click REGISTERED via UI raycaster " +
-                               $"(hit '{blockingObject.name}', which is this object or a child of it — not a real blocker).");
+                               $"(hit '{blockingObject.name}', which is this object or a child of it ï¿½ not a real blocker).");
 
                 InvokeEvents();
                 return;
@@ -151,14 +151,14 @@ public class TouchOrClickEvent : MonoBehaviour
         if (!Physics.Raycast(ray, out RaycastHit hit))
         {
             if (debugLogging)
-                Debug.Log($"[TouchOrClickEvent] '{gameObject.name}' click MISSED — raycast hit nothing at all.");
+                Debug.Log($"[TouchOrClickEvent] '{gameObject.name}' click MISSED ï¿½ raycast hit nothing at all.");
             return;
         }
 
         if (hit.collider != cachedCollider)
         {
             if (debugLogging)
-                Debug.Log($"[TouchOrClickEvent] '{gameObject.name}' click MISSED — raycast hit '{hit.collider.gameObject.name}' " +
+                Debug.Log($"[TouchOrClickEvent] '{gameObject.name}' click MISSED ï¿½ raycast hit '{hit.collider.gameObject.name}' " +
                            $"(on layer '{LayerMask.LayerToName(hit.collider.gameObject.layer)}') instead of this object's collider. " +
                            $"That object is between the camera and '{gameObject.name}', or is overlapping it.");
             return;
@@ -223,7 +223,7 @@ public class TouchOrClickEvent : MonoBehaviour
             if (entry.requiredPageIndex != currentPage)
             {
                 if (debugLogging)
-                    Debug.Log($"[TouchOrClickEvent] '{gameObject.name}' — conditional event skipped: " +
+                    Debug.Log($"[TouchOrClickEvent] '{gameObject.name}' ï¿½ conditional event skipped: " +
                                $"requires page {entry.requiredPageIndex} but current page is {currentPage}.");
                 continue;
             }
@@ -231,7 +231,7 @@ public class TouchOrClickEvent : MonoBehaviour
             if (!entry.allowMultipleTriggers && entry.hasTriggered)
             {
                 if (debugLogging)
-                    Debug.Log($"[TouchOrClickEvent] '{gameObject.name}' — conditional event for page {entry.requiredPageIndex} " +
+                    Debug.Log($"[TouchOrClickEvent] '{gameObject.name}' ï¿½ conditional event for page {entry.requiredPageIndex} " +
                                $"already triggered once and allowMultipleTriggers is false, skipping.");
                 continue;
             }
