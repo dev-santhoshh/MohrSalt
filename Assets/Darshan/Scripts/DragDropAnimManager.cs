@@ -12,14 +12,6 @@ using UnityEngine.Events;
 // NOTE: Rotation is NOT touched on drop/snap - the object keeps
 // whatever rotation it had while being dragged, so the Animator/
 // PlayableDirector's own rotation keyframes are never overridden.
-//
-// dragWorldUI behaviour:
-//   - Hidden the instant a drag starts.
-//   - If the drop is WRONG (object returns to its start position),
-//     it is shown again.
-//   - If the drop is CORRECT, it stays hidden.
-//   - If the page changes mid-drag (interrupted) and the page was
-//     never successfully solved, it is shown again too.
 // -----------------------------------------------------------------
 public class DragDropAnimManager : MonoBehaviour
 {
@@ -49,9 +41,6 @@ public class DragDropAnimManager : MonoBehaviour
 
         [Tooltip("Object shown only while this entry's dragTarget is actively being dragged. Enabled on drag start, disabled the instant the drag ends (snap success, snap fail, or interrupted by a page change).")]
         public GameObject dragHighlightObject;
-
-        [Tooltip("World-space UI (e.g. a tooltip/prompt) tied to this drag object. Hidden the instant dragging starts. If the drop is WRONG (object returns to its start position) it is shown again. If the drop is CORRECT it stays hidden for good.")]
-        public GameObject dragWorldUI;
 
         [Tooltip("Renderers to highlight while this page's object is waiting to be dragged.")]
         public List<Renderer> targetRenderers = new List<Renderer>();
@@ -167,10 +156,6 @@ public class DragDropAnimManager : MonoBehaviour
 
         if (entry.dragHighlightObject != null)
             entry.dragHighlightObject.SetActive(true);
-
-        // Hide the world-space UI the moment dragging starts.
-        if (entry.dragWorldUI != null)
-            entry.dragWorldUI.SetActive(false);
     }
 
     private void ContinueDrag(PageEntry entry)
@@ -244,7 +229,6 @@ public class DragDropAnimManager : MonoBehaviour
             if (entry.objectAnimator != null)
                 entry.objectAnimator.enabled = true;
 
-            // Correct drop -> world UI stays hidden for good on this page.
             entry.OnDragCompleted?.Invoke();
             OnSnapped(pageIndex, entry);
         }
@@ -255,10 +239,6 @@ public class DragDropAnimManager : MonoBehaviour
 
             if (entry.objectAnimator != null)
                 entry.objectAnimator.enabled = false;
-
-            // Wrong drop -> object is back at its start position, so show the UI again.
-            if (entry.dragWorldUI != null)
-                entry.dragWorldUI.SetActive(true);
         }
     }
 
@@ -294,11 +274,6 @@ public class DragDropAnimManager : MonoBehaviour
             // doesn't get left on.
             if (previousEntry.dragHighlightObject != null)
                 previousEntry.dragHighlightObject.SetActive(false);
-
-            // If we navigated away before this page was solved, restore
-            // the world-space UI so it's waiting when the user returns.
-            if (!finishedPages.Contains(currentPageIndex) && previousEntry.dragWorldUI != null)
-                previousEntry.dragWorldUI.SetActive(true);
         }
 
         currentPageIndex = pageIndex;
