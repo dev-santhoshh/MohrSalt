@@ -1,4 +1,5 @@
 using UnityEngine;
+using UnityEngine.UI;
 using System;
 using System.Collections.Generic;
 
@@ -16,6 +17,14 @@ namespace DeterminingMassofaBodyUsingMeterscale
         [Header("Highlight Material")]
         [SerializeField] private Material highlightMaterial;
 
+        [Header("UI Image Feedback (shown on correct drop)")]
+        [SerializeField] private Image resultImage;
+        [SerializeField] private Sprite resultSprite;
+        [SerializeField] private bool hideResultImageOnStart = true;
+
+        [Header("Result Image Highlight (shown only while dragging)")]
+        [SerializeField] private GameObject resultImageHighlight;
+
         public event Action OnCorrectDropped;
 
         private readonly Dictionary<Renderer, Material[]> originalMaterials =
@@ -32,6 +41,13 @@ namespace DeterminingMassofaBodyUsingMeterscale
         {
             completed = false;
             ApplyHighlightMaterial();
+
+            if (hideResultImageOnStart && resultImage != null)
+                resultImage.gameObject.SetActive(false);
+
+            // Highlight is drag-driven, so it starts hidden.
+            if (resultImageHighlight != null)
+                resultImageHighlight.SetActive(false);
         }
 
         private void CacheOriginalMaterials()
@@ -71,6 +87,41 @@ namespace DeterminingMassofaBodyUsingMeterscale
             }
         }
 
+        private void ShowResultImage()
+        {
+            if (resultImage == null) return;
+
+            if (resultSprite != null)
+                resultImage.sprite = resultSprite;
+
+            var color = resultImage.color;
+            color.a = 1f;
+            resultImage.color = color;
+
+            resultImage.gameObject.SetActive(true);
+        }
+
+        /// <summary>
+        /// Call from the drag item's OnBeginDrag to show this target's
+        /// highlight while the user is dragging.
+        /// </summary>
+        public void ShowDragHighlight()
+        {
+            if (completed) return; // already solved, don't re-show
+            if (resultImageHighlight != null)
+                resultImageHighlight.SetActive(true);
+        }
+
+        /// <summary>
+        /// Call from the drag item's OnEndDrag, regardless of whether the
+        /// drop was correct, incorrect, or missed entirely.
+        /// </summary>
+        public void HideDragHighlight()
+        {
+            if (resultImageHighlight != null)
+                resultImageHighlight.SetActive(false);
+        }
+
         public bool TryDrop(UIDragItem item)
         {
             if (completed || item == null)
@@ -83,12 +134,12 @@ namespace DeterminingMassofaBodyUsingMeterscale
 
             RestoreOriginalMaterials();
             item.gameObject.SetActive(false);
+            ShowResultImage();
+            HideDragHighlight();
 
             PageNavigationController.RequestNavigationUnlock();
             OnCorrectDropped?.Invoke();
             return true;
         }
-
-
     }
 }

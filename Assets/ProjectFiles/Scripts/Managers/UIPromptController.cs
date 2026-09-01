@@ -55,6 +55,9 @@ public class UIPromptController : MonoBehaviour
 
         ResetAllPanels();
 
+        // 🚀 NEW: apply this page's own GameObject hide/unhide list (does not affect anything below)
+        ApplyPageObjectVisibility(index);
+
         if (!page.showDialogBox && !page.showAlternatePanels)
             return;
 
@@ -124,6 +127,25 @@ public class UIPromptController : MonoBehaviour
             }
         }
     }
+
+    // 🚀 NEW: independent per-page GameObject visibility list (GameObject + one bool each)
+    private void ApplyPageObjectVisibility(int index)
+    {
+        PageData page = pages[index];
+
+        if (page.objectVisibilityList == null)
+            return;
+
+        foreach (var entry in page.objectVisibilityList)
+        {
+            if (entry == null || entry.targetObject == null)
+                continue;
+
+            // hideOnThisPage == true  -> object is DISABLED on this page
+            // hideOnThisPage == false -> object is ENABLED on this page
+            entry.targetObject.SetActive(!entry.hideOnThisPage);
+        }
+    }
 }
 
 [System.Serializable]
@@ -141,6 +163,11 @@ public class PageData
 
     [Header("Alternate Panels For This Page")]
     public List<AlternatePanelData> alternatePanels;
+
+    // 🚀 NEW
+    [Header("Object Visibility For This Page")]
+    [Tooltip("List of GameObjects to hide/unhide when this page is shown")]
+    public List<PageObjectVisibility> objectVisibilityList;
 }
 
 [System.Serializable]
@@ -156,6 +183,16 @@ public class AlternatePanelData
     public bool enableOnce;
 
     [HideInInspector] public bool hasBeenEnabledOnce;
+}
+
+// 🚀 NEW: one GameObject + one bool, per element
+[System.Serializable]
+public class PageObjectVisibility
+{
+    public GameObject targetObject;
+
+    [Tooltip("ON = object is hidden on this page. OFF = object is shown on this page.")]
+    public bool hideOnThisPage;
 }
 
 #if UNITY_EDITOR
@@ -205,4 +242,4 @@ public class UIPromptControllerEditor : Editor
         EditorUtility.SetDirty(controller);
     }
 }
-#endif
+#endif 

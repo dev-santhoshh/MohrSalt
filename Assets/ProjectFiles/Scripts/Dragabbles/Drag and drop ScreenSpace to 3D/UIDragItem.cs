@@ -21,6 +21,9 @@ namespace DeterminingMassofaBodyUsingMeterscale
         [SerializeField] private float scaleLerpSpeed = 12f;
         [SerializeField] private float returnSpeed = 12f;
 
+        [Header("Target Highlight")]
+        [SerializeField] private GhostDropTarget linkedTarget;
+
         [Header("Events")]
         public UnityEvent OnEnabled;
 
@@ -85,6 +88,9 @@ namespace DeterminingMassofaBodyUsingMeterscale
             pointerOffset = rectTransform.anchoredPosition - localPoint;
 
             StartScale(originalScale * dragScale);
+
+            if (linkedTarget != null)
+                linkedTarget.ShowDragHighlight();
         }
 
         public void OnDrag(PointerEventData eventData)
@@ -119,13 +125,18 @@ namespace DeterminingMassofaBodyUsingMeterscale
 
                 if (target != null && target.TryDrop(this))
                 {
-                    StartScale(originalScale);
+                    // item.gameObject was deactivated inside TryDrop — don't touch it further.
+                    if (linkedTarget != null)
+                        linkedTarget.HideDragHighlight();
                     return;
                 }
             }
 
             StartReturn();
             StartScale(originalScale);
+
+            if (linkedTarget != null)
+                linkedTarget.HideDragHighlight();
         }
 
         #endregion
