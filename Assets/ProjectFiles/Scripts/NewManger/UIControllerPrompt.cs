@@ -1,4 +1,4 @@
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using TMPro;
 using UnityEngine;
 using UnityEngine.UI;
@@ -7,37 +7,37 @@ using UnityEngine.UI;
 using UnityEditor;
 #endif
 
-public class UIPromptController : MonoBehaviour
+public class UIControllerPrompt : MonoBehaviour
 {
     [Header("Pages")]
-    [SerializeField] private PageData[] pages;
+    [SerializeField] public PageData[] pages;
 
     [Header("Dialog UI")]
-    [SerializeField] private GameObject dialogPanel;
-    [SerializeField] private Image dialogImage;
-    [SerializeField] private TextMeshProUGUI dialogText;
+    [SerializeField] public GameObject dialogPanel;
+    [SerializeField] public Image dialogImage;
+    [SerializeField] public TextMeshProUGUI dialogText;
 
     [Header("Common Dialog Sprite")]
-    [SerializeField] private Sprite commonDialogSprite;
+    [SerializeField] public Sprite commonDialogSprite;
 
-    private int currentPageIndex = -1;
+    public int currentPageIndex = -1;
 
-    private void OnEnable()
+    public void OnEnable()
     {
-        PageNavigationController.OnPageChanged += HandlePageChanged;
+        PageNavController.OnPageChanged += HandlePageChanged;
     }
 
-    private void OnDisable()
+    public void OnDisable()
     {
-        PageNavigationController.OnPageChanged -= HandlePageChanged;
+        PageNavController.OnPageChanged -= HandlePageChanged;
     }
 
-    private void Start()
+    public void Start()
     {
-        HandlePageChanged(PageNavigationController.CurrentIndex);
+        HandlePageChanged(PageNavController.CurrentIndex);
     }
 
-    private void HandlePageChanged(int index)
+    public void HandlePageChanged(int index)
     {
         if (index < 0 || index >= pages.Length)
             return;
@@ -46,7 +46,7 @@ public class UIPromptController : MonoBehaviour
         ShowPage(index);
     }
 
-    private void ShowPage(int index)
+    public void ShowPage(int index)
     {
         PageData page = pages[index];
 
@@ -76,7 +76,7 @@ public class UIPromptController : MonoBehaviour
         ApplyPanelVisibility(index);
     }
 
-    private void ResetAllPanels()
+    public void ResetAllPanels()
     {
         foreach (var p in pages)
         {
@@ -91,7 +91,7 @@ public class UIPromptController : MonoBehaviour
         }
     }
 
-    private void ApplyPanelVisibility(int currentIndex)
+    public void ApplyPanelVisibility(int currentIndex)
     {
         for (int i = 0; i <= currentIndex; i++)
         {
@@ -129,7 +129,7 @@ public class UIPromptController : MonoBehaviour
     }
 
     // 🚀 NEW: independent per-page GameObject visibility list (GameObject + one bool each)
-    private void ApplyPageObjectVisibility(int index)
+    public void ApplyPageObjectVisibility(int index)
     {
         PageData page = pages[index];
 
@@ -196,9 +196,9 @@ public class PageObjectVisibility
 }
 
 #if UNITY_EDITOR
-[CustomEditor(typeof(UIPromptController))]
+[CustomEditor(typeof(UIControllerPrompt))]
 [CanEditMultipleObjects]
-public class UIPromptControllerEditor : Editor
+public class UIControllerPromptEditor : Editor
 {
     public override void OnInspectorGUI()
     {
@@ -210,13 +210,13 @@ public class UIPromptControllerEditor : Editor
         {
             foreach (var t in targets)
             {
-                UIPromptController controller = (UIPromptController)t;
+                UIControllerPrompt controller = (UIControllerPrompt)t;
                 NamePages(controller);
             }
         }
     }
 
-    private void NamePages(UIPromptController controller)
+    private void NamePages(UIControllerPrompt controller)
     {
         SerializedObject so = new SerializedObject(controller);
         SerializedProperty pagesProp = so.FindProperty("pages");
