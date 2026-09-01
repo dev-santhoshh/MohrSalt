@@ -18,10 +18,6 @@ public class DragSnapManager : MonoBehaviour
         public Material highlightMaterial;
         public GameObject ghostObject;
         public List<GameObject> objectsToDisableOnSnap = new List<GameObject>();
-
-        [Tooltip("World-space UI (e.g. a tooltip/prompt) tied to this drag object. Hidden the instant dragging starts. If the drop is WRONG (object returns to its start position) it is shown again. If the drop is CORRECT it stays hidden for good.")]
-        public GameObject dragWorldUI;
-
         [HideInInspector] public List<Material> originalMaterials;
     }
 
@@ -80,9 +76,6 @@ public class DragSnapManager : MonoBehaviour
 
         Vector3 pointerWorld = ScreenToXYPlanePoint(Pointer.current.position.ReadValue());
         dragPlaneOffset = draggedTransform.position - pointerWorld;
-
-        // Hide the world-space UI the moment dragging starts.
-        if (entry.dragWorldUI != null) entry.dragWorldUI.SetActive(false);
     }
 
     private void ContinueDrag(PageEntry entry)
@@ -119,9 +112,6 @@ public class DragSnapManager : MonoBehaviour
                 if (entry.ghostObject != null) entry.ghostObject.SetActive(false);
                 entry.dragTarget.transform.position = dragStartPosition;
                 entry.dragTarget.transform.rotation = dragStartRotation;
-
-                // Wrong drop -> object is back at its start position, so show the UI again.
-                if (entry.dragWorldUI != null) entry.dragWorldUI.SetActive(true);
             }
             draggedTransform = null;
         }
@@ -206,7 +196,6 @@ public class DragSnapManager : MonoBehaviour
             }
         }
 
-        // Correct drop -> world UI stays hidden for good on this page.
         OnSnapped(pageIndex, entry);
     }
 
@@ -220,15 +209,7 @@ public class DragSnapManager : MonoBehaviour
     private void SetPageContext(int pageIndex)
     {
         PageEntry previousEntry = FindEntry(currentPageIndex);
-        if (previousEntry != null)
-        {
-            ClearHighlight(previousEntry);
-
-            // If we navigated away before this page was solved, restore
-            // the world-space UI so it's waiting when the user returns.
-            if (!finishedPages.Contains(currentPageIndex) && previousEntry.dragWorldUI != null)
-                previousEntry.dragWorldUI.SetActive(true);
-        }
+        if (previousEntry != null) ClearHighlight(previousEntry);
 
         currentPageIndex = pageIndex;
         dragging = false;
